@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Medinatown Hotel — Бронирование</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--tg-theme-bg-color, #fff);
+    color: var(--tg-theme-text-color, #1a1a1a);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  .header {
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hotel-logo {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #2E7D32, #4CAF50);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .hotel-name { font-size: 16px; font-weight: 600; }
+  .hotel-sub { font-size: 12px; color: #888; margin-top: 1px; }
+
+  .content { padding: 20px; }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--tg-theme-text-color, #1a1a1a);
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #888;
+    margin-bottom: 8px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .date-box {
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .date-box:focus-within { border-color: #4CAF50; }
+  .date-box .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .date-box .value { font-size: 15px; font-weight: 500; }
+
+  .date-box input {
+    width: 100%; border: none; background: transparent;
+    font-size: 15px; font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--tg-theme-text-color, #1a1a1a);
+    outline: none; cursor: pointer;
+  }
+
+  .nights-badge {
+    text-align: center;
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 500;
+    margin-bottom: 16px;
+    background: rgba(76,175,80,0.1);
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .field {
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+
+  .field:focus-within { border-color: #4CAF50; }
+
+  .field input, .field select {
+    width: 100%; border: none; background: transparent;
+    font-size: 15px; font-family: 'Inter', sans-serif;
+    color: var(--tg-theme-text-color, #1a1a1a);
+    outline: none;
+  }
+
+  .field select { cursor: pointer; appearance: none; }
+
+  .rooms-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .room-card {
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .room-card.selected {
+    border-color: #4CAF50;
+    background: rgba(76,175,80,0.08);
+  }
+
+  .room-card.unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .room-info .room-name { font-size: 15px; font-weight: 500; }
+  .room-info .room-size { font-size: 12px; color: #888; margin-top: 2px; }
+
+  .room-right { text-align: right; }
+  .room-price { font-size: 16px; font-weight: 600; color: #4CAF50; }
+  .room-avail { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .check-circle {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    margin-right: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .room-card.selected .check-circle {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+    font-size: 12px;
+  }
+
+  .guests-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .counter-box {
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+
+  .counter-label { font-size: 11px; color: #888; margin-bottom: 8px; }
+  .counter-sub { font-size: 10px; color: #aaa; }
+
+  .counter-ctrl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .counter-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 300;
+    line-height: 1;
+  }
+
+  .counter-val { font-size: 18px; font-weight: 600; }
+
+  .summary {
+    background: rgba(76,175,80,0.08);
+    border: 1px solid rgba(76,175,80,0.2);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 14px;
+  }
+
+  .summary-row.total {
+    border-top: 1px solid rgba(76,175,80,0.2);
+    margin-top: 8px;
+    padding-top: 12px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .summary-label { color: #666; }
+  .summary-val { font-weight: 500; }
+  .total-val { color: #4CAF50; font-size: 18px; }
+
+  .submit-btn {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 20px 20px;
+    background: var(--tg-theme-bg-color, #fff);
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .submit-btn button {
+    width: 100%;
+    padding: 15px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .submit-btn button:disabled { background: #aaa; cursor: not-allowed; }
+  .submit-btn button:active { background: #388E3C; }
+
+  .error { color: #e53935; font-size: 12px; margin-top: 6px; display: none; }
+  .divider { height: 1px; background: rgba(0,0,0,0.06); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hotel-logo">🏨</div>
+  <div>
+    <div class="hotel-name">Medinatown Hotel</div>
+    <div class="hotel-sub">ул. Мукими 58А, Ташкент</div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="section-title">Детали вашего проживания</div>
+
+  <!-- Dates -->
+  <div class="date-row">
+    <div class="date-box">
+      <div class="label">Заезд</div>
+      <input type="date" id="checkin" onchange="onDateChange()">
+    </div>
+    <div class="date-box">
+      <div class="label">Выезд</div>
+      <input type="date" id="checkout" onchange="onDateChange()">
+    </div>
+  </div>
+  <div class="nights-badge" id="nights-badge" style="display:none"></div>
+
+  <div class="divider"></div>
+
+  <!-- Rooms -->
+  <div class="form-label">Тип номера</div>
+  <div class="rooms-grid" id="rooms-grid"></div>
+
+  <div class="divider"></div>
+
+  <!-- Guests -->
+  <div class="form-label">Гости</div>
+  <div class="guests-row">
+    <div class="counter-box">
+      <div class="counter-label">Взрослые</div>
+      <div class="counter-sub">от 18 лет</div>
+      <div class="counter-ctrl">
+        <button class="counter-btn" onclick="changeGuests('adults', -1)">−</button>
+        <span class="counter-val" id="adults-val">1</span>
+        <button class="counter-btn" onclick="changeGuests('adults', 1)">+</button>
+      </div>
+    </div>
+    <div class="counter-box">
+      <div class="counter-label">Дети</div>
+      <div class="counter-sub">до 18 лет</div>
+      <div class="counter-ctrl">
+        <button class="counter-btn" onclick="changeGuests('children', -1)">−</button>
+        <span class="counter-val" id="children-val">0</span>
+        <button class="counter-btn" onclick="changeGuests('children', 1)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Personal info -->
+  <div class="form-label">Ваши данные</div>
+  <div class="field">
+    <input type="text" id="guest-name" placeholder="Имя и фамилия" autocomplete="name">
+  </div>
+  <div class="field">
+    <input type="tel" id="guest-phone" placeholder="Номер телефона" autocomplete="tel">
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Summary -->
+  <div class="summary" id="summary" style="display:none">
+    <div class="summary-row">
+      <span class="summary-label">Номер</span>
+      <span class="summary-val" id="sum-room">—</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Даты</span>
+      <span class="summary-val" id="sum-dates">—</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Ночей</span>
+      <span class="summary-val" id="sum-nights">—</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Гостей</span>
+      <span class="summary-val" id="sum-guests">—</span>
+    </div>
+    <div class="summary-row total">
+      <span>Итого</span>
+      <span class="total-val" id="sum-total">—</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="submit-btn">
+  <button id="submit-btn" onclick="submitBooking()" disabled>Выбрать номер</button>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const ROOMS = [
+  { id: "Deluxe King", name: "Делюкс King", size: "24 м² • 1 большая кровать", price: 80, total: 12 },
+  { id: "Deluxe Twin", name: "Делюкс Twin", size: "18–24 м² • 2 раздельные кровати", price: 70, total: 15 },
+  { id: "Suite",       name: "Люкс",        size: "34 м² • Большая кровать + гостиная", price: 150, total: 3 },
+];
+
+let state = {
+  checkin: null, checkout: null, nights: 0,
+  room: null, adults: 1, children: 0
+};
+
+// Set default dates
+const today = new Date();
+const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+document.getElementById('checkin').value = today.toISOString().split('T')[0];
+document.getElementById('checkout').value = tomorrow.toISOString().split('T')[0];
+state.checkin = document.getElementById('checkin').value;
+state.checkout = document.getElementById('checkout').value;
+state.nights = 1;
+
+renderRooms();
+updateNightsBadge();
+
+function renderRooms() {
+  document.getElementById('rooms-grid').innerHTML = ROOMS.map(r => `
+    <div class="room-card ${state.room === r.id ? 'selected' : ''}" onclick="selectRoom('${r.id}')">
+      <div style="display:flex;align-items:center">
+        <div class="check-circle">${state.room === r.id ? '✓' : ''}</div>
+        <div class="room-info">
+          <div class="room-name">${r.name}</div>
+          <div class="room-size">${r.size}</div>
+        </div>
+      </div>
+      <div class="room-right">
+        <div class="room-price">$${r.price}/ночь</div>
+        <div class="room-avail">${r.total} номеров</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectRoom(id) {
+  state.room = id;
+  renderRooms();
+  updateSummary();
+  updateButton();
+}
+
+function onDateChange() {
+  const ci = document.getElementById('checkin').value;
+  const co = document.getElementById('checkout').value;
+  if (ci && co && co > ci) {
+    state.checkin = ci;
+    state.checkout = co;
+    const d1 = new Date(ci), d2 = new Date(co);
+    state.nights = Math.round((d2 - d1) / 86400000);
+    updateNightsBadge();
+    updateSummary();
+  }
+}
+
+function updateNightsBadge() {
+  const el = document.getElementById('nights-badge');
+  if (state.nights > 0) {
+    el.style.display = 'block';
+    el.textContent = `🌙 ${state.nights} ${state.nights === 1 ? 'ночь' : state.nights < 5 ? 'ночи' : 'ночей'}`;
+  }
+}
+
+function changeGuests(type, delta) {
+  if (type === 'adults') {
+    state.adults = Math.max(1, Math.min(10, state.adults + delta));
+    document.getElementById('adults-val').textContent = state.adults;
+  } else {
+    state.children = Math.max(0, Math.min(10, state.children + delta));
+    document.getElementById('children-val').textContent = state.children;
+  }
+  updateSummary();
+}
+
+function formatDate(str) {
+  const d = new Date(str);
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function updateSummary() {
+  if (!state.room || !state.checkin || !state.checkout) return;
+  const room = ROOMS.find(r => r.id === state.room);
+  if (!room) return;
+  const total = room.price * state.nights;
+  document.getElementById('sum-room').textContent = room.name;
+  document.getElementById('sum-dates').textContent = `${formatDate(state.checkin)} → ${formatDate(state.checkout)}`;
+  document.getElementById('sum-nights').textContent = state.nights;
+  document.getElementById('sum-guests').textContent = `${state.adults} взр.${state.children > 0 ? ', ' + state.children + ' дет.' : ''}`;
+  document.getElementById('sum-total').textContent = `$${total}`;
+  document.getElementById('summary').style.display = 'block';
+  updateButton();
+}
+
+function updateButton() {
+  const name = document.getElementById('guest-name').value.trim();
+  const phone = document.getElementById('guest-phone').value.trim();
+  const btn = document.getElementById('submit-btn');
+  const ready = state.room && state.checkin && state.checkout && state.nights > 0;
+  btn.disabled = !ready;
+  if (ready) {
+    const room = ROOMS.find(r => r.id === state.room);
+    btn.textContent = room ? `Забронировать — $${room.price * state.nights}` : 'Забронировать';
+  }
+}
+
+document.getElementById('guest-name').addEventListener('input', updateButton);
+document.getElementById('guest-phone').addEventListener('input', updateButton);
+
+function submitBooking() {
+  const name = document.getElementById('guest-name').value.trim();
+  const phone = document.getElementById('guest-phone').value.trim();
+  const room = ROOMS.find(r => r.id === state.room);
+  if (!room) return;
+
+  const data = {
+    room_id: state.room,
+    room_name: room.name,
+    checkin: state.checkin,
+    checkout: state.checkout,
+    nights: state.nights,
+    adults: state.adults,
+    children: state.children,
+    total: room.price * state.nights,
+    name: name || 'Не указано',
+    phone: phone || 'Не указан',
+  };
+
+  tg.sendData(JSON.stringify(data));
+}
+</script>
+</body>
+</html>
